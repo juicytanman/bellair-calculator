@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Bellair" />
+<meta name="theme-color" content="#0b5fff" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>Bellair Calculator</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --panel: #141a2e;
+    --panel-2: #1b2340;
+    --border: #273056;
+    --text: #f3f5ff;
+    --muted: #9aa3c2;
+    --accent: #0b5fff;
+    --accent-2: #37c978;
+    --danger: #ff5c7a;
+    --warn: #ffb648;
+    --chip: #1f2848;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  body {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .app {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 16px 14px 48px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 2px 14px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0b5fff, #37c978);
+    display: grid; place-items: center;
+    font-weight: 800;
+    color: white;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+  }
+  .brand h1 {
+    font-size: 18px; margin: 0; font-weight: 700; letter-spacing: -0.3px;
+  }
+  .brand small { color: var(--muted); font-size: 12px; display: block; }
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: var(--panel);
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  .tab {
+    padding: 10px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--muted);
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s ease;
+  }
+  .tab.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 2px 10px rgba(11,95,255,.35);
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .card h2 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .row.single { grid-template-columns: 1fr; }
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  input[type="number"], input[type="text"], select {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-radius: 10px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type="number"]:focus, input[type="text"]:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(11,95,255,.2);
+  }
+  .period-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+    background: var(--panel-2);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .period-toggle .pt {
+    padding: 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    border-radius: 7px;
+    cursor: pointer;
+  }
+  .period-toggle .pt.active {
+    background: var(--accent);
+    color: white;
+  }
+  .result {
+    background: linear-gradient(135deg, rgba(11,95,255,.15), rgba(55,201,120,.12));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .result .big {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin: 4px 0 2px;
+  }
+  .result .big.green { color: var(--accent-2); }
+  .result .big.red { color: var(--danger); }
+  .kv {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    font-size: 14px;
+  }
+  .kv:last-child { border-bottom: none; }
+  .kv span.k { color: var(--muted); }
+  .kv span.v { font-weight: 700; }
+  .kv span.v.neg { color: var(--danger); }
+  .kv span.v.pos { color: var(--accent-2); }
+  .chip {
+    display: inline-block;
+    background: var(--chip);
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 6px;
+    border: 1px solid var(--border);
+  }
+  .bar-row {
+    height: 28px;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    margin: 8px 0 4px;
+    border: 1px solid var(--border);
+  }
+  .bar-row > div {
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    min-width: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend span.dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: -1px;
+  }
+  .van-block {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .van-block h3 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .van-block h3 button {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  button.primary {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+  }
+  button.secondary {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+  }
+  .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .waterfall .wf {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    font-size: 13px;
+  }
+  .waterfall .wf.total {
+    background: rgba(55,201,120,.1);
+    border-radius: 8px;
+    margin-top: 6px;
+    border: 1px solid rgba(55,201,120,.3);
+    font-weight: 700;
+  }
+  .waterfall .wf.negative {
+    color: var(--danger);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .small-muted { color: var(--muted); font-size: 12px; }
+  .footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 20px;
+    padding: 14px 0;
+  }
+  @media (max-width: 480px) {
+    .app { padding: 10px 10px 40px; }
+    .result .big { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo">B</div>
+      <div>
+        <h1>Bellair Calculator</h1>
+        <small>Cash converter &middot; Job profit</small>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="cash">Cash Converter</div>
+    <div class="tab" data-tab="profit">Job Profit</div>
+  </div>
+
+  <!-- ================= CASH CONVERTER ================= -->
+  <section class="tab-panel active" id="panel-cash">
+    <div class="card">
+      <h2>Cash job details</h2>
+      <div class="row">
+        <div>
+          <label>Cash received ($)</label>
+          <input type="number" id="c_cash" value="800" inputmode="decimal" />
+        </div>
+        <div>
+          <label>Material / unit cost ($)</label>
+          <input type="number" id="c_materials" value="250" inputmode="decimal" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Your tax rate (%)</label>
+          <input type="number" id="c_tax" value="35" inputmode="decimal" />
+          <div class="hint">Marginal rate. Default 35% = 32.5% + 2% Medicare.</div>
+        </div>
+        <div>
+          <label>GST rate (%)</label>
+          <input type="number" id="c_gst" value="10" inputmode="decimal" />
+        </div>
+      </div>
+    </div>
+
+    <div class="result">
+      <div class="small-muted">Invoiced equivalent (inc GST)</div>
+      <div class="big green" id="c_invoiced">$0</div>
+      <div class="small-muted">Multiplier: <b id="c_mult" style="color:#fff">0x</b></div>
+
+      <div class="bar-row" id="c_bar"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:#37c978"></span>Your profit</span>
+        <span><span class="dot" style="background:#ffb648"></span>Materials</span>
+        <span><span class="dot" style="background:#0b5fff"></span>Income tax</span>
+        <span><span class="dot" style="background:#ff5c7a"></span>GST</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Breakdown</h2>
+      <div class="kv"><span class="k">Cash in your pocket</span><span class="v" id="c_cashpocket">$0</span></div>
+      <div class="kv"><span class="k">Cash profit (after materials)</span><span class="v pos" id="c_cashprofit">$0</span></div>
+      <div class="kv"><span class="k">Pre-tax profit needed</span><span class="v" id="c_pretax">$0</span></div>
+      <div class="kv"><span class="k">Ex-GST invoice amount</span><span class="v" id="c_exgst">$0</span></div>
+      <div class="kv"><span class="k">GST component</span><span class="v neg" id="c_gstval">$0</span></div>
+      <div class="kv"><span class="k">Income tax on profit</span><span class="v neg" id="c_taxval">$0</span></div>
+    </div>
+
+    <div class="card">
+      <h2>How to read this</h2>
+      <p class="small-muted" style="line-height:1.5">
+        Cash jobs keep 100% of the money after materials — no tax, no GST. To match that take-home on a proper invoiced job, you need to gross up the profit for income tax, then add GST on top. Materials pass through at cost (just GST added), so the more materials in a job, the closer the multiplier gets to 1.1×. Pure labour jobs sit closer to 1.5×.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= JOB PROFIT ================= -->
+  <section class="tab-panel" id="panel-profit">
+    <div class="card">
+      <h2>View figures as</h2>
+      <div class="period-toggle" id="p_period">
+        <div class="pt" data-period="weekly">Weekly</div>
+        <div class="pt active" data-period="monthly">Monthly</div>
+        <div class="pt" data-period="annual">Annual</div>
+      </div>
+      <div class="hint">All overheads below are entered in their natural period (weekly wages, annual insurance etc). This toggle only changes how the summary at the bottom is displayed.</div>
+    </div>
+
+    <div class="card">
+      <h2>Revenue &amp; direct job costs</h2>
+      <div class="row">
+        <div>
+          <label>Revenue per week (inc GST)</label>
+          <input type="number" id="p_revenue" value="6500" inputmode="decimal" />
+        </div>
+        <div>
+          <label>Materials &amp; units per week (inc GST)</label>
+          <input type="number" id="p_materials" value="1800" inputmode="decimal" />
+        </div>
+      </div>
+      <div class="hint">Use your typical weekly numbers. Revenue includes the 10% GST you collect; materials include the 10% GST you pay.</div>
+    </div>
+
+    <div class="card">
+      <h2>Labour</h2>
+      <div class="row">
+        <div>
+          <label>Total wages per week ($)</label>
+          <input type="number" id="p_wages" value="2400" inputmode="decimal" />
+          <div class="hint">All staff combined, before super.</div>
+        </div>
+        <div>
+          <label>Super rate (%)</label>
+          <input type="number" id="p_super" value="11.5" inputmode="decimal" />
+          <div class="hint" id="p_super_out">Super: $0/wk</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Vans</h2>
+      <div id="p_vans"></div>
+      <button class="secondary" id="p_addvan" type="button">+ Add another van</button>
+      <div class="hint" style="margin-top:8px">Enter each cost in its natural period &mdash; fuel weekly, insurance yearly, e-tag monthly, maintenance yearly, repayments monthly. The calculator normalises them.</div>
+    </div>
+
+    <div class="card">
+      <h2>Fixed overheads</h2>
+      <div class="row">
+        <div>
+          <label>Rent / premises ($/wk)</label>
+          <input type="number" id="p_rent" value="250" inputmode="decimal" />
+        </div>
+        <div>
+          <label>Utilities &amp; internet ($/wk)</label>
+          <input type="number" id="p_utilities" value="60" inputmode="decimal" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Business insurance ($/yr)</label>
+          <input type="number" id="p_bizins" value="3200" inputmode="decimal" />
+        </div>
+        <div>
+          <label>Software &amp; subscriptions ($/mth)</label>
+          <input type="number" id="p_software" value="180" inputmode="decimal" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Accounting / bookkeeping ($/yr)</label>
+          <input type="number" id="p_accounting" value="3500" inputmode="decimal" />
+        </div>
+        <div>
+          <label>Other overheads ($/wk)</label>
+          <input type="number" id="p_other" value="50" inputmode="decimal" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Tax</h2>
+      <div class="row">
+        <div>
+          <label>Income tax rate (%)</label>
+          <input type="number" id="p_tax" value="30" inputmode="decimal" />
+          <div class="hint">Use your company rate (25–30%) or marginal rate if sole trader.</div>
+        </div>
+        <div>
+          <label>GST rate (%)</label>
+          <input type="number" id="p_gst" value="10" inputmode="decimal" />
+        </div>
+      </div>
+    </div>
+
+    <div class="result">
+      <div class="small-muted">Net profit <span id="p_period_label">per month</span></div>
+      <div class="big" id="p_netprofit">$0</div>
+      <div class="small-muted">Net margin: <b id="p_margin" style="color:#fff">0%</b> &middot; Ex-GST revenue: <b id="p_revexgst" style="color:#fff">$0</b></div>
+    </div>
+
+    <div class="card waterfall">
+      <h2>Waterfall</h2>
+      <div id="p_waterfall"></div>
+    </div>
+
+    <div class="card">
+      <h2>What it takes to break even</h2>
+      <div class="kv"><span class="k">Break-even revenue / wk (ex-GST)</span><span class="v" id="p_be_week">$0</span></div>
+      <div class="kv"><span class="k">Effective hourly cost (team)</span><span class="v" id="p_hourly">$0</span></div>
+      <div class="hint" style="margin-top:8px">Break-even assumes the same material ratio. Below that you're running at a loss.</div>
+    </div>
+  </section>
+
+  <div class="footer">
+    Bellair Calculator &middot; Works offline once loaded &middot; v1.0
+  </div>
+</div>
+
+<script>
+// ---------- Helpers ----------
+const $ = (id) => document.getElementById(id);
+const fmt = (n, d = 0) => {
+  if (!isFinite(n)) n = 0;
+  return n.toLocaleString('en-AU', { style: 'currency', currency: 'AUD', minimumFractionDigits: d, maximumFractionDigits: d });
+};
+const num = (el) => {
+  const v = parseFloat(el.value);
+  return isFinite(v) ? v : 0;
+};
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- Cash Converter ----------
+function calcCash() {
+  const cash = num($('c_cash'));
+  const mat = num($('c_materials'));
+  const taxRate = num($('c_tax')) / 100;
+  const gstRate = num($('c_gst')) / 100;
+
+  const cashProfit = Math.max(0, cash - mat);
+  const preTaxProfit = taxRate < 1 ? cashProfit / (1 - taxRate) : cashProfit;
+  const incomeTax = preTaxProfit - cashProfit;
+  const exGst = preTaxProfit + mat;
+  const gstVal = exGst * gstRate;
+  const invoiced = exGst + gstVal;
+  const mult = cash > 0 ? invoiced / cash : 0;
+
+  $('c_invoiced').textContent = fmt(invoiced);
+  $('c_mult').textContent = mult.toFixed(2) + '×';
+  $('c_cashpocket').textContent = fmt(cash);
+  $('c_cashprofit').textContent = fmt(cashProfit);
+  $('c_pretax').textContent = fmt(preTaxProfit);
+  $('c_exgst').textContent = fmt(exGst);
+  $('c_gstval').textContent = fmt(gstVal);
+  $('c_taxval').textContent = fmt(incomeTax);
+
+  // Bar breakdown
+  const total = invoiced || 1;
+  const parts = [
+    { label: 'Profit', val: cashProfit, color: '#37c978' },
+    { label: 'Materials', val: mat, color: '#ffb648' },
+    { label: 'Tax', val: incomeTax, color: '#0b5fff' },
+    { label: 'GST', val: gstVal, color: '#ff5c7a' },
+  ];
+  const bar = $('c_bar');
+  bar.innerHTML = '';
+  parts.forEach(p => {
+    const pct = (p.val / total) * 100;
+    if (pct < 0.1) return;
+    const d = document.createElement('div');
+    d.style.background = p.color;
+    d.style.width = pct + '%';
+    d.textContent = pct >= 8 ? Math.round(pct) + '%' : '';
+    bar.appendChild(d);
+  });
+}
+['c_cash','c_materials','c_tax','c_gst'].forEach(id => $(id).addEventListener('input', calcCash));
+
+// ---------- Job Profit ----------
+let vans = [
+  { name: 'Van 1', fuel: 120, insurance: 1400, etag: 40, maint: 1600, repay: 520 },
+  { name: 'Van 2', fuel: 100, insurance: 1400, etag: 40, maint: 1200, repay: 480 },
+];
+
+function renderVans() {
+  const c = $('p_vans');
+  c.innerHTML = '';
+  vans.forEach((v, i) => {
+    const div = document.createElement('div');
+    div.className = 'van-block';
+    div.innerHTML = `
+      <h3>
+        <input type="text" value="${v.name}" data-i="${i}" data-field="name" style="background:transparent;border:none;color:var(--text);font-weight:700;font-size:13px;padding:0;flex:1" />
+        ${vans.length > 1 ? `<button type="button" data-remove="${i}">Remove</button>` : ''}
+      </h3>
+      <div class="row">
+        <div>
+          <label>Fuel ($/wk)</label>
+          <input type="number" value="${v.fuel}" data-i="${i}" data-field="fuel" inputmode="decimal" />
+        </div>
+        <div>
+          <label>Insurance ($/yr)</label>
+          <input type="number" value="${v.insurance}" data-i="${i}" data-field="insurance" inputmode="decimal" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>E-tag ($/mth)</label>
+          <input type="number" value="${v.etag}" data-i="${i}" data-field="etag" inputmode="decimal" />
+        </div>
+        <div>
+          <label>Maintenance ($/yr)</label>
+          <input type="number" value="${v.maint}" data-i="${i}" data-field="maint" inputmode="decimal" />
+        </div>
+      </div>
+      <div class="row single">
+        <div>
+          <label>Repayments ($/mth)</label>
+          <input type="number" value="${v.repay}" data-i="${i}" data-field="repay" inputmode="decimal" />
+        </div>
+      </div>
+    `;
+    c.appendChild(div);
+  });
+  // attach handlers
+  c.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const i = +e.target.dataset.i;
+      const f = e.target.dataset.field;
+      if (f === 'name') vans[i][f] = e.target.value;
+      else vans[i][f] = parseFloat(e.target.value) || 0;
+      calcProfit();
+    });
+  });
+  c.querySelectorAll('button[data-remove]').forEach(b => {
+    b.addEventListener('click', (e) => {
+      vans.splice(+e.target.dataset.remove, 1);
+      renderVans();
+      calcProfit();
+    });
+  });
+}
+$('p_addvan').addEventListener('click', () => {
+  vans.push({ name: 'Van ' + (vans.length + 1), fuel: 100, insurance: 1400, etag: 40, maint: 1200, repay: 480 });
+  renderVans();
+  calcProfit();
+});
+
+// Period toggle
+let period = 'monthly';
+document.querySelectorAll('#p_period .pt').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('#p_period .pt').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    period = p.dataset.period;
+    calcProfit();
+  });
+});
+
+function calcProfit() {
+  // all figures normalised to weekly
+  const gstRate = num($('p_gst')) / 100;
+  const taxRate = num($('p_tax')) / 100;
+
+  const revInc = num($('p_revenue'));
+  const revEx = revInc / (1 + gstRate);
+  const gstCollected = revInc - revEx;
+
+  const matInc = num($('p_materials'));
+  const matEx = matInc / (1 + gstRate);
+  const gstPaidMat = matInc - matEx;
+
+  const wages = num($('p_wages'));
+  const superRate = num($('p_super')) / 100;
+  const superAmt = wages * superRate;
+  $('p_super_out').textContent = 'Super: ' + fmt(superAmt) + '/wk';
+  const labourTotal = wages + superAmt;
+
+  // Van costs -> weekly
+  let vanWeekly = 0;
+  vans.forEach(v => {
+    vanWeekly += (v.fuel || 0);
+    vanWeekly += (v.insurance || 0) / 52;
+    vanWeekly += ((v.etag || 0) * 12) / 52;
+    vanWeekly += (v.maint || 0) / 52;
+    vanWeekly += ((v.repay || 0) * 12) / 52;
+  });
+
+  // Fixed overheads -> weekly
+  const rent = num($('p_rent'));
+  const utils = num($('p_utilities'));
+  const bizIns = num($('p_bizins')) / 52;
+  const software = (num($('p_software')) * 12) / 52;
+  const accounting = num($('p_accounting')) / 52;
+  const other = num($('p_other'));
+  const fixedWeekly = rent + utils + bizIns + software + accounting + other;
+
+  // GST remitted = collected - paid on materials (we'll also assume van/fuel/etc GST claimable is small change — keep model simple)
+  const gstRemitted = Math.max(0, gstCollected - gstPaidMat);
+
+  const grossProfit = revEx - matEx - labourTotal - vanWeekly - fixedWeekly;
+  const tax = Math.max(0, grossProfit) * taxRate;
+  const net = grossProfit - tax;
+  const margin = revEx > 0 ? (net / revEx) * 100 : 0;
+
+  // Period scale factor
+  const pf = period === 'weekly' ? 1 : period === 'monthly' ? (52 / 12) : 52;
+  const plabel = period === 'weekly' ? 'per week' : period === 'monthly' ? 'per month' : 'per year';
+  $('p_period_label').textContent = plabel;
+
+  $('p_netprofit').textContent = fmt(net * pf);
+  $('p_netprofit').className = 'big ' + (net >= 0 ? 'green' : 'red');
+  $('p_margin').textContent = margin.toFixed(1) + '%';
+  $('p_revexgst').textContent = fmt(revEx * pf);
+
+  // Waterfall
+  const wf = [
+    { l: 'Revenue (inc GST)', v: revInc * pf, neg: false },
+    { l: 'Less GST collected', v: -gstCollected * pf, neg: true },
+    { l: 'Revenue ex-GST', v: revEx * pf, neg: false, bold: true },
+    { l: 'Less materials (ex-GST)', v: -matEx * pf, neg: true },
+    { l: 'Less wages', v: -wages * pf, neg: true },
+    { l: 'Less super', v: -superAmt * pf, neg: true },
+    { l: 'Less van costs', v: -vanWeekly * pf, neg: true },
+    { l: 'Less fixed overheads', v: -fixedWeekly * pf, neg: true },
+    { l: 'Gross profit', v: grossProfit * pf, neg: false, bold: true },
+    { l: 'Less income tax', v: -tax * pf, neg: true },
+    { l: 'Net profit', v: net * pf, neg: net < 0, total: true },
+  ];
+  const wfc = $('p_waterfall');
+  wfc.innerHTML = '';
+  wf.forEach(r => {
+    const d = document.createElement('div');
+    d.className = 'wf' + (r.total ? ' total' : '') + (r.neg ? ' negative' : '');
+    d.innerHTML = `<span>${r.l}</span><span>${fmt(r.v)}</span>`;
+    if (r.bold) d.style.fontWeight = '700';
+    wfc.appendChild(d);
+  });
+
+  // Break-even weekly revenue (ex-GST): need grossProfit = 0
+  // revEx_be - matRatio*revEx_be = labour+van+fixed  -> assuming material % constant
+  const matRatio = revEx > 0 ? matEx / revEx : 0;
+  const costsFixed = labourTotal + vanWeekly + fixedWeekly;
+  const denom = 1 - matRatio;
+  const beEx = denom > 0 ? costsFixed / denom : 0;
+  $('p_be_week').textContent = fmt(beEx);
+
+  // Effective team hourly cost — assume 38h/week per person; use 1 person minimum
+  // Infer rough number of workers from wages at ~$38/hr avg (just a ballpark)
+  const hoursAssumed = wages > 0 ? (wages / 38) : 38;
+  const hourly = hoursAssumed > 0 ? labourTotal / hoursAssumed : 0;
+  $('p_hourly').textContent = fmt(hourly);
+}
+
+// Wire up all profit inputs
+['p_revenue','p_materials','p_wages','p_super','p_rent','p_utilities','p_bizins','p_software','p_accounting','p_other','p_tax','p_gst'].forEach(id => {
+  $(id).addEventListener('input', calcProfit);
+});
+
+// ---------- Init ----------
+renderVans();
+calcCash();
+calcProfit();
+
+// ---------- Service worker registration ----------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
